@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+import glob
+import re
+import cv2
+class Draw(object):
+    def __init__(self, txt_path, img_path, save_path):
+        self.txt_path = txt_path
+        self.img_path = img_path
+        self.save_path = save_path
+        self.file_path_txt = glob.glob(r'%s/*.txt' % self.txt_path)
+        self.file_path_jpg = glob.glob(r'%s/*.png' % self.img_path)
+    def draw_box(self):
+        #match pattern like ['(160, 182) - (302, 431)', '(420, 171) - (535, 486)']
+        pattern_box = re.compile('\(\d+, \d+\) - \(\d+, \d+\)')
+        #match pattern like '160'
+        pattern_coordinate = re.compile('\d+')
+        try:
+            for i, path in enumerate(self.file_path_txt):
+                img = cv2.imread(self.file_path_jpg[i])
+                assert isinstance(path, object)
+                f = open(path)
+                content = f.read()
+                boxes = pattern_box.findall(content)
+                #all_bbox like [[xmin, ymin, xmax, ymax],...]
+                all_bbox = [[int(each) for each in pattern_coordinate.findall(box)] for box in boxes]
+                for bbox in all_bbox:
+                    xmin, ymin, xmax, ymax = bbox
+                    cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0,255,0), 4)
+                cv2.imwrite(self.save_path % i, img)
+        except IOError:
+            print u"error no such file or path"
+if __name__=="__main__":
+    dir_txt = r"G:\gluon\PennFudanPed\Annotation"
+    dir_jpg = r"G:\gluon\PennFudanPed\PNGImages"
+    save_path = r'G:\gluon\PennFudanPed\new_img_%d.png'
+    draw = Draw(dir_txt, dir_jpg, save_path)
+    draw.draw_box()
+
+
